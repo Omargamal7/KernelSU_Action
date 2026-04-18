@@ -40,6 +40,8 @@ jobs:
             CUSTOM_GCC_32_BRANCH
             CUSTOM_GCC_32_BIN
             ENABLE_KERNELSU
+            KERNELSU_REPO
+            KERNELSU_SETUP_PATH
             KERNELSU_TAG
             ADD_KPROBES_CONFIG
             DISABLE-LTO
@@ -203,8 +205,32 @@ jobs:
       if: env.ENABLE_KERNELSU == 'true'
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
-        curl -LSs "https://raw.githubusercontent.com/tiann/KernelSU/main/kernel/setup.sh" | bash -s ${{ env.KERNELSU_TAG }}
-        KSU_VERSION=$(cd KernelSU && expr $(/usr/bin/git rev-list --count HEAD) + 10200)
+        KSU_REPO="${{ env.KERNELSU_REPO }}"
+        KSU_SETUP_PATH="${{ env.KERNELSU_SETUP_PATH }}"
+        KSU_TAG="${{ env.KERNELSU_TAG }}"
+
+        if [ -z "$KSU_REPO" ]; then
+            KSU_REPO="https://github.com/tiann/KernelSU"
+        fi
+        if [ -z "$KSU_SETUP_PATH" ]; then
+            KSU_SETUP_PATH="kernel/setup.sh"
+        fi
+        if [ -z "$KSU_TAG" ]; then
+            KSU_TAG="v0.9.5"
+        fi
+
+        KSU_REPO_PATH=$(echo "$KSU_REPO" | sed -E 's#https?://github.com/##; s#\\.git$##')
+        KSU_SETUP_URL="https://raw.githubusercontent.com/$KSU_REPO_PATH/main/$KSU_SETUP_PATH"
+        echo "Using KSU setup script: $KSU_SETUP_URL"
+        curl -LSsf "$KSU_SETUP_URL" | bash -s "$KSU_TAG"
+
+        if [ -d KernelSU/.git ]; then
+            KSU_VERSION=$(cd KernelSU && expr $(/usr/bin/git rev-list --count HEAD) + 10200)
+        elif [ -d Wild_KSU/.git ]; then
+            KSU_VERSION=$(cd Wild_KSU && /usr/bin/git rev-parse --short HEAD)
+        else
+            KSU_VERSION=$(date +%Y%m%d)
+        fi
         echo "UPLOADNAME=-KernelSU_$KSU_VERSION" >> $GITHUB_ENV
 
     - name: Setup Configuration for Kernel
@@ -218,6 +244,10 @@ jobs:
             else
                 echo "CONFIG_KSU=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
             fi
+            grep -q '^CONFIG_MODULES=y' arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }} || echo "CONFIG_MODULES=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
+            grep -q '^CONFIG_KPROBES=y' arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }} || echo "CONFIG_KPROBES=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
+            grep -q '^CONFIG_HAVE_KPROBES=y' arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }} || echo "CONFIG_HAVE_KPROBES=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
+            grep -q '^CONFIG_KPROBE_EVENTS=y' arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }} || echo "CONFIG_KPROBE_EVENTS=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
         fi
         if [ ${{ env.ADD_KPROBES_CONFIG }} = true -a ${{ env.APPLY_KSU_PATCH }} != true ]; then
             echo "CONFIG_MODULES=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}

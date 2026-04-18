@@ -117,6 +117,15 @@ LTO is used to optimize the kernel but sometimes causes errors.
 
 Enable KernelSU for troubleshooting kernel failures or compiling the kernel separately.
 
+#### KernelSU repo and setup script
+
+To support Wild KSU or other forks, you can configure:
+
+- `KERNELSU_REPO` (default: `https://github.com/WildKernels/Wild_KSU`)
+- `KERNELSU_SETUP_PATH` (default: `kernel/setup.sh`)
+
+The workflow will download and run the setup script from that repository automatically.
+
 #### KernelSU Branch or Tag
 
 [KernelSU 1.0 no longer supports non-GKI kernels](https://github.com/tiann/KernelSU/issues/1705). The last supported version is [v0.9.5](https://github.com/tiann/KernelSU/tree/v0.9.5), please make sure to use the correct branch.
