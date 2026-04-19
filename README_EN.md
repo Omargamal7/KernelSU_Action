@@ -21,6 +21,16 @@ If you are not the author of the Kernel, and are using someone else's labor to b
 
 Fork this repository to your storage account and edit the `config.env` file with the following content. Afterward, click `Star` or `Action`. On the left side, you can see the `Build Kernel` option. Click on it, and you will find the `Run workflows` option above the dialog. Click on it to start the build.
 
+### Cloud-only patch flow checklist
+
+- In `config.env`, make sure `BUILD_BOOT_IMG=true`.
+- In the Codex Cloud environment, download your ROM package and extract `boot.img` (for example from payload.bin / boot.img.lz4).
+- Upload the extracted `boot.img` to your GitHub repository (for example as a repo file, Release asset, or any direct-download location).
+- Set `SOURCE_BOOT_IMAGE` to the direct link from the previous step (must be stock or match your current ROM/device tree base).
+- Run the `Build Kernel` workflow and wait until it finishes.
+- Download the artifact named with `boot-<device>-<timestamp>` from the Actions page.
+- Extract the artifact and use the included `boot.img` directly.
+
 ### Kernel Source
 
 Change this to your Kernel repository address.

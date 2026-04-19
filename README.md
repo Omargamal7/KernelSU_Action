@@ -23,6 +23,16 @@
 
 Fork 本仓库到你的储存库然后按照以下内容编辑 config.env，之后点击`Star`或`Action`，在左侧可看见`Build Kernel`选项，点击选项会看见右边的大对话框的上面会有`Run workflows`点击它会启动构建。
 
+### Cloud-only patch flow（仅云端打补丁）清单
+
+- 在 `config.env` 中确保 `BUILD_BOOT_IMG=true`。
+- 在 Codex Cloud 环境下载 ROM 包并提取 `boot.img`（如 payload.bin / boot.img.lz4 解包）。
+- 将提取到的 `boot.img` 上传到你的 GitHub 仓库（例如仓库文件、Release 附件或可直链下载的位置）。
+- 将 `SOURCE_BOOT_IMAGE` 设置为上一步得到的可直接下载链接（必须是 stock 或与你当前 ROM/设备树匹配的镜像）。
+- 触发 `Build Kernel` workflow 并等待任务完成。
+- 在 Actions 页面下载名称包含 `boot-<device>-<timestamp>` 的 artifact。
+- 解压 artifact 后直接获取 `boot.img`，可用于后续刷入或自行打包。
+
 ### Kernel Source
 
 修改为你的内核仓库地址
